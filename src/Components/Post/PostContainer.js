@@ -3,9 +3,10 @@ import PropTypes from "prop-types";
 import useInput from "../../Hooks/useInput";
 import PostPresenter from "./PostPresenter";
 import Post from "./index";
-import { useMutation } from "react-apollo-hooks";
+import { useMutation, useQuery } from "react-apollo-hooks";
 import { ADD_COMMENT, TOGGLE_LIKE } from "./PostQueries";
 import { toast } from "react-toastify";
+import { ME } from "../../SharedQueries";
 
 const PostContainer = ({
   id,
@@ -21,8 +22,9 @@ const PostContainer = ({
   const [isLikedS, setIsLiked] = useState(isLiked);
   const [likeCountS, setLikeCount] = useState(likeCount);
   const [currentItem, setCurrentItem] = useState(0);
+  const [selfComments, setSelfComments] = useState([]);
   const comment = useInput("");
-
+  const { data: meQuery } = useQuery(ME);
   const [toggleLikeMutation] = useMutation(TOGGLE_LIKE, {
     variables: { postId: id }
   });
@@ -54,10 +56,39 @@ const PostContainer = ({
     }
     try {
       await toggleLikeMutation();
-
     } catch {
       setIsLiked(!isLikedS);
       toast.error("Cant register like");
+    }
+  };
+
+  const onKeyPress = async event => {
+    const { which } = event;
+
+    if (which === 13) {
+      event.preventDefault();
+      try {
+        const {
+          data: { addComment }
+        } = await addCommentMutation();
+        console.log(addComment);
+        setSelfComments([...selfComments, addComment]);
+        comment.setValue("");
+      } catch {
+        toast.error("Cant send comment");
+      }
+
+
+
+      // setSelfComments([
+      //   ...selfComments,
+      //   {
+      //     id: Math.floor(Math.random() * 192523),
+      //     text: comment.value,
+      //     user: { username: meQuery.me.username }
+      //   }
+      // ]);
+      // addCommentMutation();
     }
   };
 
@@ -76,6 +107,8 @@ const PostContainer = ({
       setLikeCount={setLikeCount}
       currentItem={currentItem}
       toggleLike={toggleLike}
+      onKeyPress={onKeyPress}
+      selfComments={selfComments}
     />
   );
 };
