@@ -9,7 +9,7 @@ const getSize = size => {
   } else if (size === "md") {
     number = 50;
   } else if (size === "lg") {
-    return 150;
+    number = 150;
   }
   return `
     width:${number}px;
